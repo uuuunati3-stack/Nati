@@ -1,0 +1,10 @@
+Nati/
+│
+├── .github/
+│   └── workflows/
+│       └── opencode.yml
+│
+├── src/
+├── public/
+├── package.json
+└── README.md
