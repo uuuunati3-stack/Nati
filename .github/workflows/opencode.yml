@@ -1,53 +1,31 @@
 name: OpenCode AI Developer
 
 on:
-  workflow_dispatch:
-    inputs:
-      task:
-        description: "Task for OpenCode"
-        required: true
-        type: string
-
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
 
 jobs:
   opencode:
+    if: |
+      contains(github.event.comment.body, '/opencode') ||
+      contains(github.event.comment.body, '/oc')
     runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
 
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
-          model: google/gemini-3.8-flash
-          use_github_token: true
-          prompt: |
-            You are the autonomous software development agent for the Nati project.
-
-            User task:
-            ${{ inputs.task }}
-
-            Instructions:
-            1. Inspect the repository before changing anything.
-            2. Understand the existing project structure and code.
-            3. Implement the requested task.
-            4. Do not make unrelated changes.
-            5. Run appropriate tests, checks, and builds.
-            6. If something fails, diagnose and repair it.
-            7. Re-run the tests after repairs.
-            8. Create a separate branch for the work.
-            9. Commit the changes with a clear commit message.
-            10. Open a Pull Request instead of directly changing main.
-            11. Clearly explain what was changed and what tests were performed.
-            12. If the task cannot safely be completed, stop and explain the blocker.
+          model: anthropic/claude-sonnet-4-20250514
