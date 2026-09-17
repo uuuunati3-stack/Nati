@@ -28,4 +28,4 @@ jobs:
         env:
           GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
         with:
-          model: google/gemini-3-flash
+          model: google/gemini-3.5-flash
