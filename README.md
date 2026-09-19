@@ -107,6 +107,14 @@ The GitHub tool supports these actions:
 
 A model can invoke the tool during a run, but the operator should still review the diff and test output before allowing a production repository workflow. The local git helper does not force-push.
 
+## GitHub Actions issue-to-PR workflow
+
+The repository includes `.github/workflows/opencode-agent.yml`. It runs on a manual dispatch with an issue number, or automatically when an issue receives the explicit `autocode` label. The workflow grants only `contents: write`, `issues: read`, and `pull-requests: write`; GitHub supplies the short-lived `GITHUB_TOKEN` automatically.
+
+For the model provider, add `OPENCODE_API_KEY` under **Repository Settings → Secrets and variables → Actions → New repository secret**. Do not commit the key or place it in an issue. If the OpenCode gateway is not the default local-compatible endpoint, add repository variables named `OPENCODE_BASE_URL` and `OPENCODE_MODEL`. The workflow never prints these values.
+
+After merging this workflow into the default branch, run it from **Actions → OpenCode Issue Agent → Run workflow**, enter an issue number, and start the job. The job checks the repository, asks OpenCode to modify files, runs tests before and after the change, checks the diff, creates `autocoder/issue-N`, commits, pushes, and opens a pull request. Review that pull request before merging it. To enable automatic operation, add the `autocode` label to a specific issue.
+
 ## ReAct contract
 
 The provider receives the conversation plus JSON tool schemas. If it returns `tool_calls`, the agent dispatches each call and appends a `tool` message containing the exact result. The loop stops on a model response without tool calls or after `--max-steps`. This bound prevents accidental infinite loops and preserves a complete audit trail in SQLite.
