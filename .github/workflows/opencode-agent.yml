@@ -1,0 +1,48 @@
+name: OpenCode Issue Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to solve"
+        required: true
+        type: string
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: write
+
+jobs:
+  solve-issue:
+    # Automatic runs require the explicit 'autocode' label. Manual runs are allowed.
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'autocode'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run tests before changes
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Run OpenCode issue-to-PR agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_BASE_URL: ${{ vars.OPENCODE_BASE_URL }}
+          OPENCODE_MODEL: ${{ vars.OPENCODE_MODEL }}
+        run: |
+          issue_number="${{ inputs.issue_number || github.event.issue.number }}"
+          PYTHONPATH=. python3 -m agent.workflow --issue "$issue_number" --repo "${{ github.repository }}"
+
+      - name: Run tests after changes
+        run: python3 -m unittest discover -s tests -v
